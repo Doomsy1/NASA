@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - NASA Space Apps Challenge</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+        .jumbotron {
+            background-color: #007bff;
+            color: white;
+            padding: 50px 25px;
+            text-align: center;
+        }
+        .jumbotron h1 {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        .jumbotron p {
+            font-size: 1.2rem;
+        }
+        .card {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#">About Us</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/forecast">Forecast Soil Conditions</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Logout</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Jumbotron -->
+<div class="jumbotron">
+    <h1>Welcome Back!</h1>
+    <p>Explore how NASA's Earth observation data can help make informed agricultural decisions.</p>
+</div>
+
+<!-- Main content -->
+<div class="container my-5">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Forecast Soil Conditions</h5>
+                    <p class="card-text">Get accurate soil condition forecasts to help make informed decisions regarding crop selection, planting, and fertilization.</p>
+                    <a href="/forecast" class="btn btn-primary">View Forecast</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Labour Connections</h5>
+                    <p class="card-text">Connect with available labor resources to ensure timely fieldwork and optimize farming productivity.</p>
+                    <a href="#" class="btn btn-primary">Connect Now</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Collaborative Pest Control</h5>
+                    <p class="card-text">Work together with neighboring farmers to control pests and diseases effectively, minimizing crop loss.</p>
+                    <a href="#" class="btn btn-primary">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Crop Choices Assistance</h5>
+                    <p class="card-text">Receive tailored recommendations for crop selection based on soil conditions and weather forecasts.</p>
+                    <a href="#" class="btn btn-primary">Get Recommendations</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Fusarium Head Blight in Wheat</h5>
+                    <p class="card-text">Learn about Fusarium head blight (FHB) and how to manage it. Understand how warm, humid conditions contribute to this issue and find effective strategies to mitigate its impact.</p>
+                    <a href="#" class="btn btn-primary">Learn About FHB</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Resources and Tools</h5>
+                    <p class="card-text">Find useful resources, tools, and NASA datasets to help you with your challenge.</p>
+                    <a href="#" class="btn btn-primary">Explore Resources</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
