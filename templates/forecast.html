@@ -3,25 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Forecast</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>NASA Space Apps Challenge - Forecast Soil Conditions</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+        }
+        .jumbotron {
+            background-color: #007bff;
+            color: white;
+            padding: 50px 25px;
+            text-align: center;
+        }
+        .jumbotron h1 {
+            font-size: 3rem;
+            font-weight: bold;
+        }
+        .jumbotron p {
+            font-size: 1.2rem;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Weather Forecast</h1>
-    </header>
-    <main>
-        <section id="current-weather">
-            <h2>Current Weather</h2>
-            <!-- Current weather details will go here -->
-        </section>
-        <section id="forecast">
-            <h2>Forecast</h2>
-            <!-- Forecast details will go here -->
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2023 NASA</p>
-    </footer>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="index.html">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" alt="Logo">
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.html">Back to Home</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Jumbotron -->
+<div class="jumbotron">
+    <h1>Forecast Soil Conditions</h1>
+    <p>Get accurate soil condition forecasts to help make informed decisions regarding crop selection, planting, and fertilization.</p>
+</div>
+
+<!-- Main content -->
+<div class="container my-5">
+    <!-- Map Section -->
+    <div id="map"></div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    // Initialize the map
+    var map = L.map('map').setView([42.3154, -83.0364], 6); // Set initial view to Windsor-Essex region
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    // Example marker for Fusarium Head Blight data in Windsor-Essex
+    L.marker([42.3154, -83.0364]).addTo(map)
+        .bindPopup('<b>Fusarium Head Blight Alert</b><br>High risk of FHB detected in this area.');
+</script>
 </body>
 </html>
