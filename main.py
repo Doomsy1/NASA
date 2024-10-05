@@ -164,14 +164,14 @@ def plot():
 
     # Create a scatter mapbox
     fig = px.scatter_mapbox(data, 
-                             lat='Latitude', 
-                             lon='Longitude', 
-                             size='Soil Moisture',
-                             color='Soil Moisture',
-                             color_continuous_scale=px.colors.sequential.Viridis,
-                             mapbox_style='carto-positron',
-                             zoom=3,
-                             title='Soil Moisture Map')
+                lat='Latitude', 
+                lon='Longitude', 
+                size='Soil Moisture',
+                color='Soil Moisture',
+                color_continuous_scale=px.colors.sequential.Viridis,
+                mapbox_style='carto-positron',
+                zoom=3,
+                title='Soil Moisture Map')
 
     # Generate the HTML for the plot
     plot_html = fig.to_html(full_html=False)
