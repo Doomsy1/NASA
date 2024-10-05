@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from netCDF4 import Dataset
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 
@@ -27,7 +28,30 @@ def home():
         return render_template("logged_in_home.html")
     else:
         return render_template("logged_out_home.html")
-    
+
+@app.route('/soil_moisture_data')
+def soil_moisture_data():
+    # Load the soil moisture NetCDF file
+    dataset = Dataset('path/to/soil_moisture.nc4', 'r')
+
+    # Assuming 'lat', 'lon', and 'soil_moisture' are variable names in the .nc4 file
+    latitudes = dataset.variables['lat'][:]
+    longitudes = dataset.variables['lon'][:]
+    soil_moisture = dataset.variables['soil_moisture'][:]
+
+    data_points = []
+
+    # Iterate through the soil moisture data and append lat/lon points
+    for i in range(len(latitudes)):
+        data_points.append({
+            'lat': float(latitudes[i]),
+            'lon': float(longitudes[i]),
+            'value': float(soil_moisture[i])
+        })
+
+    dataset.close()
+    return jsonify(data_points) 
+
 @app.route('/forecast')
 def forecast():
     if 'logged_in' not in session or not session['logged_in']:
