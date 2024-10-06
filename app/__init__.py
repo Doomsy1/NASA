@@ -1,6 +1,10 @@
 # app/__init__.py
+import os
 from flask import Flask
 from flask_socketio import SocketIO
+from dotenv import load_dotenv
+
+load_dotenv()
 
 socketio = SocketIO()
 
