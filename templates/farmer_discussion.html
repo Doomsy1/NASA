@@ -3,23 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farmer Live Discussion</title>
+    <title>Interactive Map with Live Chat</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        #map-container {
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            flex: 1;
+        }
+        #map {
+            flex: 1;
+            height: calc(100vh - 56px);
+            transition: width 0.5s ease;
         }
         .chat-container {
+            width: 0;
             max-width: 800px;
-            margin: 50px auto;
+            height: 100vh;
+            overflow: hidden;
             background: #ffffff;
             padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-left: 1px solid #dee2e6;
+            transition: width 0.5s ease;
+        }
+        .chat-container.open {
+            width: 30%;
         }
         .chat-box {
-            height: 400px;
+            height: calc(100vh - 180px);
             overflow-y: scroll;
             border: 1px solid #dee2e6;
             padding: 15px;
@@ -35,54 +58,230 @@
         .chat-message .message {
             margin-left: 10px;
         }
+        .chat-message .timestamp {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-left: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="container chat-container">
-        <h2 class="text-center">Farmer Live Discussion</h2>
-        <div class="chat-box" id="chat-box">
-            <!-- Chat messages will be appended here -->
-        </div>
-        <form id="chat-form">
-            <div class="input-group">
-                <input type="text" id="message" class="form-control" placeholder="Type your message here..." required>
-                <button type="submit" class="btn btn-primary">Send</button>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">Interactive Map</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">About</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Contact</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
             </div>
-        </form>
+        </div>
+    </nav>
+
+    <div id="map-container">
+        <div id="map"></div>
+
+        <div class="container chat-container" id="chatroom">
+            <h2 class="text-center">Circle Live Discussion</h2>
+            <div class="chat-box" id="chat-box">
+                <!-- Chat messages will be appended here -->
+            </div>
+            <form id="chat-form">
+                <div class="input-group">
+                    <input type="text" id="message" class="form-control" placeholder="Type your message here..." required>
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </div>
+            </form>
+            <button class="btn btn-secondary mt-3" id="close-chat">Close Chat</button>
+        </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <script>
-        $(document).ready(function () {
-            // Establish SocketIO connection
-            var socket = io.connect('http://' + document.domain + ':' + location.port);
+    var username = "{{ session['username'] if 'username' in session else 'Anonymous' }}";
+        var map = L.map('map').setView([0, 0], 2);
+        var allCircleMarkers = []; // Store all circle markers
 
-            // Placeholder for user name
-            const username = "{{ username }}";
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-            // Append message to chat box
-            function appendMessage(username, message) {
-                const messageHtml = `<div class="chat-message"><span class="username">${username}:</span><span class="message">${message}</span></div>`;
-                $('#chat-box').append(messageHtml);
-                $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
-            }
+        var currentCircleId = null;
+        var socket = io.connect('http://' + document.domain + ':' + location.port);
 
-            // Handle incoming messages from server
-            socket.on('message', function (data) {
-                appendMessage(data.username, data.message);
+        // Fetch and add existing circles from the database
+        fetch('/get_circles')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(circle => {
+                    addCircleToMap(circle);
+                });
             });
 
-            // Handle form submission
-            $('#chat-form').on('submit', function (e) {
-                e.preventDefault();
-                const message = $('#message').val().trim();
-                if (message !== "") {
-                    socket.send({username: username, message: message});  // Send message to server
-                    $('#message').val("");
+        // Function to add a circle to the map and set up event listener
+        function addCircleToMap(circle) {
+            var circleMarker = L.circle([circle.lat, circle.lng], {
+                radius: circle.radius * 1000,
+                color: 'blue',
+                fillColor: '#03f',
+                fillOpacity: 0.5
+            }).addTo(map);
+
+            allCircleMarkers.push({
+                id: circle.id,
+                marker: circleMarker
+            });
+
+            // Bind a click event to open the chatroom for each circle
+            circleMarker.on('click', function() {
+                currentCircleId = circle.id;
+                openChatroom(circle.id);
+                highlightSelectedCircle(circle.id);
+                socket.emit('join', {circle_id: currentCircleId, username: username});
+            });
+        }
+
+        // Add click event to the map to create a new circle if no other circles are nearby
+        map.on('click', function(e) {
+            if (!isNearbyCircle(e.latlng)) {
+                var radius = 50; // Default radius for the new circle
+                var newCircle = L.circle(e.latlng, {
+                    radius: radius * 1000,
+                    color: 'blue',
+                    fillColor: '#03f',
+                    fillOpacity: 0.5
+                }).addTo(map);
+
+                // Send the circle data to the server
+                $.ajax({
+                    url: '/add_circle',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        lat: e.latlng.lat,
+                        lng: e.latlng.lng,
+                        radius: radius
+                    }),
+                    success: function(response) {
+                        console.log(response.message);
+                        allCircleMarkers.push({
+                            id: response.id,
+                            marker: newCircle
+                        });
+                        newCircle.on('click', function() {
+                            currentCircleId = response.id;
+                            openChatroom(response.id);
+                            highlightSelectedCircle(response.id);
+                            socket.emit('join', {circle_id: currentCircleId, username: "Anonymous"});
+                        });
+                    },
+                    error: function() {
+                        alert('Failed to create circle.');
+                    }
+                });
+            }
+        });
+
+        // Function to determine if a click is near an existing circle
+        function isNearbyCircle(latlng) {
+            var isNearby = false;
+            allCircleMarkers.forEach(function(circle) {
+                var distance = map.distance(latlng, circle.marker.getLatLng());
+                if (distance < circle.marker.getRadius()) {
+                    isNearby = true;
                 }
             });
+            return isNearby;
+        }
+
+        // Function to open the chatroom for a specific circle
+        function openChatroom(circleId) {
+            $('#chatroom').addClass('open');
+            $('#chat-box').empty();
+            $('#map').css('width', '70%');
+
+            // Fetch existing messages for the circle
+            $.ajax({
+                url: `/get_chat_messages/${circleId}`,
+                type: 'GET',
+                success: function(messages) {
+                    messages.forEach(function(message) {
+                        appendMessage(message.username, message.message, message.timestamp);
+                    });
+                },
+                error: function() {
+                    $('#chat-box').append('<div>Failed to load messages.</div>');
+                }
+            });
+        }
+
+        // Append message to chat box with timestamp
+        function appendMessage(username, message, timestamp) {
+            const messageHtml = `<div class="chat-message"><span class="username">${username}:</span><span class="message">${message}</span><span class="timestamp">${timestamp}</span></div>`;
+            $('#chat-box').append(messageHtml);
+            $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+        }
+
+        // Handle incoming messages from server
+        socket.on('message', function(data) {
+            if (data.circle_id === currentCircleId) {
+                appendMessage(data.username, data.message, data.timestamp);
+            }
         });
+
+        // Send a new message in the chatroom
+        $('#chat-form').on('submit', function(e) {
+            e.preventDefault();
+            const message = $('#message').val().trim();
+            // Use the logged-in user's name from session
+            const username = window.username;
+            const timestamp = new Date().toLocaleString(); // Adding timestamp
+            if (message !== "" && currentCircleId) {
+                socket.send({circle_id: currentCircleId, username: username, message: message, timestamp: timestamp});
+                $('#message').val("");
+            }
+        });
+
+        // Close chatroom functionality
+        $('#close-chat').on('click', function() {
+            socket.emit('leave', {circle_id: currentCircleId, username: "Anonymous"});
+            $('#chatroom').removeClass('open');
+            $('#map').css('width', '100%');
+            currentCircleId = null;
+            resetCircleColors();
+        });
+
+        // Highlight the selected circle and reset others
+        function highlightSelectedCircle(circleId) {
+            allCircleMarkers.forEach(function(circle) {
+                if (circle.id === circleId) {
+                    circle.marker.setStyle({ color: 'green', fillColor: '#0f3', fillOpacity: 0.7 });
+                } else {
+                    circle.marker.setStyle({ color: 'blue', fillColor: '#03f', fillOpacity: 0.5 });
+                }
+            });
+        }
+
+        // Reset all circles to default blue color
+        function resetCircleColors() {
+            allCircleMarkers.forEach(function(circle) {
+                circle.marker.setStyle({ color: 'blue', fillColor: '#03f', fillOpacity: 0.5 });
+            });
+        }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

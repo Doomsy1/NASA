@@ -3,7 +3,7 @@ from netCDF4 import Dataset
 from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 from functools import wraps
-from flask_socketio import SocketIO, send, emit
+from flask_socketio import SocketIO, send, emit, join_room, leave_room
 import time
 import numpy as np
 import pandas as pd
@@ -23,11 +23,19 @@ def init_db():
                     email TEXT UNIQUE NOT NULL,
                     password TEXT NOT NULL
                 )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS circles (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lat REAL NOT NULL,
+                    lng REAL NOT NULL,
+                    radius REAL NOT NULL
+                )''')
     c.execute('''CREATE TABLE IF NOT EXISTS messages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    circle_id INTEGER NOT NULL,
                     username TEXT NOT NULL,
                     message TEXT NOT NULL,
-                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (circle_id) REFERENCES circles(id)
                 )''')
     conn.commit()
     conn.close()
@@ -45,7 +53,6 @@ def login_required(f):
 
 # Routes
 @app.route('/')
-@login_required
 def home():
     return render_template("logged_in_home.html")
 
@@ -132,78 +139,76 @@ def farmer_discussion():
     conn.close()
     return render_template('farmer_discussion.html', username=session['user_name'], messages=messages)
 
-@app.route('/plot')
-def plot():
-    # Open the NC4 file
-    nc_file = 'test.nc4'  # Replace with your NC4 file path
-    dataset = Dataset(nc_file, 'r')
-
-    # Access soil moisture data
-    sm1 = dataset.variables['sm1'][:]  # Read the soil moisture data
-    latitudes = dataset.variables['lat'][:]  # Read latitude data
-    longitudes = dataset.variables['lon'][:]
-
-    # Check for missing values and replace them with NaN
-    sm1_masked = np.ma.masked_where(sm1 == dataset.variables['sm1']._FillValue, sm1)
-    sm1_masked[sm1_masked < 0] = np.nan
-   
-    sm1_values = sm1_masked[0].flatten()  # Flatten the array
-    latitudes = np.repeat(latitudes, len(longitudes))  # Repeat latitudes for each longitude
-    longitudes = np.tile(longitudes, len(latitudes) // len(longitudes))  # Tile longitudes
-
-    # Create a DataFrame for Plotly
-
-    data = pd.DataFrame({
-        'Latitude': latitudes,
-        'Longitude': longitudes,
-        'Soil Moisture': sm1_values
-    })
-
-    # Filter out NaN values
-    data = data.dropna()
-
-    # Create a scatter mapbox
-    fig = px.scatter_mapbox(data, 
-                lat='Latitude', 
-                lon='Longitude', 
-                size='Soil Moisture',
-                color='Soil Moisture',
-                color_continuous_scale=px.colors.sequential.Viridis,
-                mapbox_style='carto-positron',
-                zoom=3,
-                title='Soil Moisture Map')
-
-    # Generate the HTML for the plot
-    plot_html = fig.to_html(full_html=False)
-
-    return plot_html
-
-@socketio.on('connect')
-def handle_connect():
-    # Send previous messages to newly connected clients
+@app.route('/get_circles', methods=['GET'])
+def get_circles():
+    # Fetch all circles from the database
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute("SELECT username, message, timestamp FROM messages ORDER BY timestamp ASC")
+    c.execute("SELECT * FROM circles")
+    circles = c.fetchall()
+    conn.close()
+    return jsonify([{'id': circle[0], 'lat': circle[1], 'lng': circle[2], 'radius': circle[3]} for circle in circles])
+
+@app.route('/add_circle', methods=['POST'])
+def add_circle():
+    data = request.get_json()
+    lat = data['lat']
+    lng = data['lng']
+    radius = data['radius']
+
+    # Insert new circle into the database
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute("INSERT INTO circles (lat, lng, radius) VALUES (?, ?, ?)", (lat, lng, radius))
+    conn.commit()
+    circle_id = c.lastrowid
+    conn.close()
+
+    return jsonify({'message': 'Circle added successfully', 'id': circle_id})
+
+@app.route('/get_chat_messages/<int:circle_id>', methods=['GET'])
+def get_chat_messages(circle_id):
+    # Fetch messages for a specific circle
+    conn = sqlite3.connect('users.db')
+    c = conn.cursor()
+    c.execute("SELECT username, message, timestamp FROM messages WHERE circle_id = ? ORDER BY timestamp ASC", (circle_id,))
     messages = c.fetchall()
     conn.close()
-    for message in messages:
-        emit('message', {'username': message[0], 'message': message[1], 'timestamp': message[2]})
+    return jsonify([{'username': message[0], 'message': message[1], 'timestamp': message[2]} for message in messages])
+
+@socketio.on('join')
+def on_join(data):
+    circle_id = data['circle_id']
+    username = data['username']
+    room = f"circle_{circle_id}"
+    join_room(room)
+    send({'username': username, 'message': f'{username} has joined the chat.'}, to=room)
+
+@socketio.on('leave')
+def on_leave(data):
+    circle_id = data['circle_id']
+    username = data['username']
+    room = f"circle_{circle_id}"
+    leave_room(room)
+    send({'username': username, 'message': f'{username} has left the chat.'}, to=room)
 
 @socketio.on('message')
 def handle_message(msg):
-    username = session['user_name']
+    circle_id = msg['circle_id']
+    username = msg['username']
     message = msg['message']
+    room = f"circle_{circle_id}"
     print(f"{username}: {message}")
 
     # Save message to the database
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute("INSERT INTO messages (username, message) VALUES (?, ?)", (username, message))
+    c.execute("INSERT INTO messages (circle_id, username, message) VALUES (?, ?, ?)", (circle_id, username, message))
     conn.commit()
     conn.close()
 
-    # Broadcast message to all clients
-    send({'username': username, 'message': message, 'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')}, broadcast=True)
+    # Broadcast message to all clients in the same chatroom
+    send({'circle_id': circle_id, 'username': username, 'message': message, 'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')}, to=room)
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
