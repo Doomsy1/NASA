@@ -1,8 +1,8 @@
+<!-- templates/logged_out_home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>myFarm</title>
     <style>
         * {
@@ -198,33 +198,36 @@
 <body>
 
 <header>
-    <a href="/home"><img src="static/logo.png" alt="myFarm logo" style="width: 15vw; length: 50px;"></a> <!-- Replace this with your logo -->
+    <a href="{{ url_for('main.home') }}">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="myFarm logo" style="width: 15vw; length: 50px;">
+    </a>
 </header>
 
 <nav>
     <ul>
-        <li><a href="/about">About Us</a></li>
+        <li><a href="{{ url_for('main.about') }}">About Us</a></li>
         <li>
             <a href="#">Data <span class="arrow">▼</span></a>
             <ul>
-                <li><a href="#">Soil Moisture Data</a></li>
-                <li><a href="#">Temperature Data</a></li>
+                <li><a href="/plot/soil">Soil Moisture Data</a></li>
+                <li><a href="/plot/temp">Temperature Data</a></li>
+                <li><a href="/plot/sr">Surface Runoff</a></li>
             </ul>
         </li>
         <li>
             <a href="#">Chats <span class="arrow">▼</span></a>
             <ul>
-                <li><a href="/farmer_discussion">Global Chat</a></li>
-                <li><a href="/chat">AI Chat</a></li>
+                <li><a href="{{ url_for('main.farmer_discussion') }}">Global Chat</a></li>
+                <li><a href="{{ url_for('main.chat') }}">AI Chat</a></li>
             </ul>
         </li>
-        <li><a href="/index">Simulation</a></li>
+        <li><a href="{{ url_for('main.forecast') }}">Simulation</a></li>
     </ul>
 </nav>
 
 <div class="auth-buttons">
-    <a href="/login">Login</a>
-    <a href="/register">Register</a>
+    <a href="{{ url_for('auth.login') }}">Login</a>
+    <a href="{{ url_for('auth.register') }}">Register</a>
 </div>
 
 <main>
@@ -238,17 +241,17 @@
 <!-- Services Section -->
 <section id="services" class="services">
     <div class="service">
-        <img src="static/chat-icon2.png" alt="Chats Icon">
+        <img src="{{ url_for('static', filename='chat-icon2.png') }}" alt="Chats Icon">
         <h2>Chats</h2>
         <p>Chat with local farmers, farmers around the globe, or our AI!</p>
     </div>
     <div class="service">
-        <img src="static/data-icon.png" alt="Data Icon">
+        <img src="{{ url_for('static', filename='data-icon.png') }}" alt="Data Icon">
         <h2>Data</h2>
         <p>Access various NASA data visualized on a map!</p>
     </div>
     <div class="service">
-        <img src="static/simulation-icon.png" alt="Simulation Icon">
+        <img src="{{ url_for('static', filename='simulation-icon.png') }}" alt="Simulation Icon">
         <h2>Simulation</h2>
         <p>Simulate our rover to familiarize yourself with the controls and explore the virtual terrain!</p>
     </div>
@@ -260,7 +263,7 @@
 </footer>
 
 <div class="chat-icon">
-    <img src="static/chat-icon.png" alt="Chat"> <!-- Replace with your chat icon -->
+    <img src="{{ url_for('static', filename='chat-icon.png') }}" alt="Chat">
 </div>
 
 <script>

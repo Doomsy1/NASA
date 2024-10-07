@@ -7,6 +7,16 @@
 </head>
 <body>
     <h1>Soil Moisture Data Visualization</h1>
-    <a href="{{ url_for('plot') }}">View Soil Moisture Plot</a>
+    <form action="/plot" method="GET">
+        <label for="data_type">Choose data type:</label>
+        <select id="data_type" name="data_type">
+            <option value="SoilMoist_S_tavg">Soil Moisture (m³/m³)</option>
+            <option value="AvgSurfT_tavg">Temperature (K)</option>
+            <option value="Qs_tavg">Surface Runoff (mm)</option>
+            <!-- Add other options here -->
+        </select>
+        <br><br>
+        <input type="submit" value="Plot Data">
+    </form>
 </body>
 </html>
