@@ -33,7 +33,7 @@ def add_circle():
 def get_chat_messages(circle_id):
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute("SELECT username, message, timestamp FROM messages WHERE circle_id = ? ORDER BY timestamp ASC", (circle_id,))
+    c.execute("SELECT username, message, timestamp FROM messages2 WHERE circle_id = ? ORDER BY timestamp ASC", (circle_id,))
     messages = c.fetchall()
     conn.close()
     return jsonify([{'username': message[0], 'message': message[1], 'timestamp': message[2]} for message in messages])

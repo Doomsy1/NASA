@@ -1,14 +1,11 @@
+<!-- app/templates/farmer_discussion.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Map with Live Chat</title>
+    <title>Farmer Discussion Map</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,19 +67,20 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Interactive Map</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Home</a>
+                        <a class="nav-link" href="{{ url_for('main.home') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">About</a>
+                        <a class="nav-link" href="{{ url_for('main.forecast') }}">Forecast</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">Contact</a>
+                        <a class="nav-link" href="{{ url_for('main.chat') }}">AI Assistant</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="/logout">Logout</a>
@@ -110,177 +108,240 @@
         </div>
     </div>
 
+    <!-- Include jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-    var username = "{{ session['username'] if 'username' in session else 'Anonymous' }}";
-        var map = L.map('map').setView([0, 0], 2);
-        var allCircleMarkers = []; // Store all circle markers
+    var username = "{{ username }}";
+    var map = L.map('map').setView([0, 0], 2);
+    var allCircleMarkers = []; // Store all circle markers
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    var currentCircleId = null;
+    var pollingInterval = null;
+    var lastMessageId = 0;
+
+    // Fetch and add existing circles from the database
+    fetch('/get_circles')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(circle => {
+                addCircleToMap(circle);
+            });
+        });
+
+    // Function to add a circle to the map and set up event listener
+    function addCircleToMap(circle) {
+        var circleMarker = L.circle([circle.lat, circle.lng], {
+            radius: circle.radius * 1000,
+            color: 'blue',
+            fillColor: '#03f',
+            fillOpacity: 0.5
         }).addTo(map);
 
-        var currentCircleId = null;
-        var socket = io.connect('http://' + document.domain + ':' + location.port);
+        allCircleMarkers.push({
+            id: circle.id,
+            marker: circleMarker
+        });
 
-        // Fetch and add existing circles from the database
-        fetch('/get_circles')
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(circle => {
-                    addCircleToMap(circle);
-                });
-            });
+        // Bind a click event to open the chatroom for each circle
+        circleMarker.on('click', function() {
+            currentCircleId = circle.id;
+            openChatroom(circle.id);
+            highlightSelectedCircle(circle.id);
+            joinCircle();
+        });
+    }
 
-        // Function to add a circle to the map and set up event listener
-        function addCircleToMap(circle) {
-            var circleMarker = L.circle([circle.lat, circle.lng], {
-                radius: circle.radius * 1000,
+    // Add click event to the map to create a new circle if no other circles are nearby
+    map.on('click', function(e) {
+        if (!isNearbyCircle(e.latlng)) {
+            var radius = 50; // Default radius for the new circle
+            var newCircle = L.circle(e.latlng, {
+                radius: radius * 1000,
                 color: 'blue',
                 fillColor: '#03f',
                 fillOpacity: 0.5
             }).addTo(map);
 
-            allCircleMarkers.push({
-                id: circle.id,
-                marker: circleMarker
-            });
-
-            // Bind a click event to open the chatroom for each circle
-            circleMarker.on('click', function() {
-                currentCircleId = circle.id;
-                openChatroom(circle.id);
-                highlightSelectedCircle(circle.id);
-                socket.emit('join', {circle_id: currentCircleId, username: username});
-            });
-        }
-
-        // Add click event to the map to create a new circle if no other circles are nearby
-        map.on('click', function(e) {
-            if (!isNearbyCircle(e.latlng)) {
-                var radius = 50; // Default radius for the new circle
-                var newCircle = L.circle(e.latlng, {
-                    radius: radius * 1000,
-                    color: 'blue',
-                    fillColor: '#03f',
-                    fillOpacity: 0.5
-                }).addTo(map);
-
-                // Send the circle data to the server
-                $.ajax({
-                    url: '/add_circle',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        lat: e.latlng.lat,
-                        lng: e.latlng.lng,
-                        radius: radius
-                    }),
-                    success: function(response) {
-                        console.log(response.message);
-                        allCircleMarkers.push({
-                            id: response.id,
-                            marker: newCircle
-                        });
-                        newCircle.on('click', function() {
-                            currentCircleId = response.id;
-                            openChatroom(response.id);
-                            highlightSelectedCircle(response.id);
-                            socket.emit('join', {circle_id: currentCircleId, username: "Anonymous"});
-                        });
-                    },
-                    error: function() {
-                        alert('Failed to create circle.');
-                    }
-                });
-            }
-        });
-
-        // Function to determine if a click is near an existing circle
-        function isNearbyCircle(latlng) {
-            var isNearby = false;
-            allCircleMarkers.forEach(function(circle) {
-                var distance = map.distance(latlng, circle.marker.getLatLng());
-                if (distance < circle.marker.getRadius()) {
-                    isNearby = true;
-                }
-            });
-            return isNearby;
-        }
-
-        // Function to open the chatroom for a specific circle
-        function openChatroom(circleId) {
-            $('#chatroom').addClass('open');
-            $('#chat-box').empty();
-            $('#map').css('width', '70%');
-
-            // Fetch existing messages for the circle
+            // Send the circle data to the server
             $.ajax({
-                url: `/get_chat_messages/${circleId}`,
-                type: 'GET',
-                success: function(messages) {
-                    messages.forEach(function(message) {
-                        appendMessage(message.username, message.message, message.timestamp);
+                url: '/add_circle',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    lat: e.latlng.lat,
+                    lng: e.latlng.lng,
+                    radius: radius
+                }),
+                success: function(response) {
+                    console.log(response.message);
+                    allCircleMarkers.push({
+                        id: response.id,
+                        marker: newCircle
+                    });
+                    newCircle.on('click', function() {
+                        currentCircleId = response.id;
+                        openChatroom(response.id);
+                        highlightSelectedCircle(response.id);
+                        joinCircle();
                     });
                 },
                 error: function() {
-                    $('#chat-box').append('<div>Failed to load messages.</div>');
+                    alert('Failed to create circle.');
                 }
             });
         }
+    });
 
-        // Append message to chat box with timestamp
-        function appendMessage(username, message, timestamp) {
-            const messageHtml = `<div class="chat-message"><span class="username">${username}:</span><span class="message">${message}</span><span class="timestamp">${timestamp}</span></div>`;
-            $('#chat-box').append(messageHtml);
-            $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
-        }
-
-        // Handle incoming messages from server
-        socket.on('message', function(data) {
-            if (data.circle_id === currentCircleId) {
-                appendMessage(data.username, data.message, data.timestamp);
+    // Function to determine if a click is near an existing circle
+    function isNearbyCircle(latlng) {
+        var isNearby = false;
+        allCircleMarkers.forEach(function(circle) {
+            var distance = map.distance(latlng, circle.marker.getLatLng());
+            if (distance < circle.marker.getRadius()) {
+                isNearby = true;
             }
         });
+        return isNearby;
+    }
 
-        // Send a new message in the chatroom
-        $('#chat-form').on('submit', function(e) {
-            e.preventDefault();
-            const message = $('#message').val().trim();
-            // Use the logged-in user's name from session
-            const username = window.username;
-            const timestamp = new Date().toLocaleString(); // Adding timestamp
-            if (message !== "" && currentCircleId) {
-                socket.send({circle_id: currentCircleId, username: username, message: message, timestamp: timestamp});
-                $('#message').val("");
-            }
-        });
+    // Function to open the chatroom for a specific circle
+    function openChatroom(circleId) {
+        $('#chatroom').addClass('open');
+        $('#chat-box').empty();
+        $('#map').css('width', '70%');
+        lastMessageId = 0;
 
-        // Close chatroom functionality
-        $('#close-chat').on('click', function() {
-            socket.emit('leave', {circle_id: currentCircleId, username: "Anonymous"});
-            $('#chatroom').removeClass('open');
-            $('#map').css('width', '100%');
-            currentCircleId = null;
-            resetCircleColors();
-        });
+        // Fetch existing messages for the circle
+        fetchMessages();
 
-        // Highlight the selected circle and reset others
-        function highlightSelectedCircle(circleId) {
-            allCircleMarkers.forEach(function(circle) {
-                if (circle.id === circleId) {
-                    circle.marker.setStyle({ color: 'green', fillColor: '#0f3', fillOpacity: 0.7 });
-                } else {
-                    circle.marker.setStyle({ color: 'blue', fillColor: '#03f', fillOpacity: 0.5 });
+        // Start polling for new messages
+        if (pollingInterval) clearInterval(pollingInterval);
+        pollingInterval = setInterval(fetchMessages, 3000);
+    }
+
+    // Function to fetch messages from the server
+    function fetchMessages() {
+        if (currentCircleId) {
+            $.ajax({
+                url: `/get_messages?circle_id=${currentCircleId}&last_message_id=${lastMessageId}`,
+                type: 'GET',
+                success: function(data) {
+                    data.messages.forEach(function(message) {
+                        appendMessage(message.username, message.message, message.timestamp);
+                        lastMessageId = message.id;
+                    });
+                },
+                error: function() {
+                    console.log('Failed to fetch messages.');
                 }
             });
         }
+    }
 
-        // Reset all circles to default blue color
-        function resetCircleColors() {
-            allCircleMarkers.forEach(function(circle) {
+    // Append message to chat box with timestamp
+    function appendMessage(username, message, timestamp) {
+        const messageHtml = `<div class="chat-message"><span class="username">${username}:</span><span class="message">${message}</span><span class="timestamp">${timestamp}</span></div>`;
+        $('#chat-box').append(messageHtml);
+        $('#chat-box').scrollTop($('#chat-box')[0].scrollHeight);
+    }
+
+    // Send a new message in the chatroom
+    $('#chat-form').on('submit', function(e) {
+        e.preventDefault();
+        const message = $('#message').val().trim();
+        const timestamp = new Date().toLocaleString();
+        if (message !== "" && currentCircleId) {
+            $.ajax({
+                url: '/send_message',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    circle_id: currentCircleId,
+                    message: message
+                }),
+                success: function() {
+                    $('#message').val("");
+                    // Message will be fetched in the next polling cycle
+                },
+                error: function() {
+                    alert('Failed to send message.');
+                }
+            });
+        }
+    });
+
+    // Close chatroom functionality
+    $('#close-chat').on('click', function() {
+        leaveCircle();
+        $('#chatroom').removeClass('open');
+        $('#map').css('width', '100%');
+        currentCircleId = null;
+        resetCircleColors();
+        if (pollingInterval) clearInterval(pollingInterval);
+    });
+
+    // Highlight the selected circle and reset others
+    function highlightSelectedCircle(circleId) {
+        allCircleMarkers.forEach(function(circle) {
+            if (circle.id === circleId) {
+                circle.marker.setStyle({ color: 'green', fillColor: '#0f3', fillOpacity: 0.7 });
+            } else {
                 circle.marker.setStyle({ color: 'blue', fillColor: '#03f', fillOpacity: 0.5 });
+            }
+        });
+    }
+
+    // Reset all circles to default blue color
+    function resetCircleColors() {
+        allCircleMarkers.forEach(function(circle) {
+            circle.marker.setStyle({ color: 'blue', fillColor: '#03f', fillOpacity: 0.5 });
+        });
+    }
+
+    // Function to join a circle (notify the server)
+    function joinCircle() {
+        if (currentCircleId) {
+            $.ajax({
+                url: '/join',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    circle_id: currentCircleId
+                }),
+                success: function(response) {
+                    appendMessage('System', response.message, new Date().toLocaleString());
+                },
+                error: function() {
+                    console.log('Failed to join circle.');
+                }
             });
         }
+    }
+
+    // Function to leave a circle (notify the server)
+    function leaveCircle() {
+        if (currentCircleId) {
+            $.ajax({
+                url: '/leave',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    circle_id: currentCircleId
+                }),
+                success: function(response) {
+                    appendMessage('System', response.message, new Date().toLocaleString());
+                },
+                error: function() {
+                    console.log('Failed to leave circle.');
+                }
+            });
+        }
+    }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

@@ -7,9 +7,14 @@ import os
 
 main_bp = Blueprint('main', __name__)
 
+
+# Routes
 @main_bp.route('/')
 def home():
-    return render_template("logged_in_home.html")
+    if 'logged_in' not in session:
+        return render_template("logged_out_home.html")
+    else:
+        return render_template("logged_in_home.html")
 
 @main_bp.route('/chat', methods=['GET', 'POST'])
 @login_required
@@ -29,7 +34,7 @@ def chat():
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",  # Or "gpt-4" if you have access
                 messages=[
-                    {"role": "system", "content": "You are an expert farming assistant."},
+                    {"role": "system", "content": "You are AgroAssist, an intelligent and friendly farming assistant chatbot designed to help farmers and agricultural enthusiasts. Your expertise spans crop cultivation, soil health, irrigation techniques, pest and disease management, livestock care, weather forecasting, and sustainable farming practices. You provide clear, concise, and actionable advice tailored to the user's specific location, climate, and farming conditions. When giving recommendations, consider factors like seasonality, local regulations, and the latest advancements in agricultural technology. Your goal is to support users in optimizing their farming operations while promoting environmental sustainability and efficiency."},
                     *session['conversation'],
                 ],
                 max_tokens=150,
@@ -60,7 +65,7 @@ def forecast():
 def farmer_discussion():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    c.execute("SELECT username, message, timestamp FROM messages ORDER BY timestamp ASC")
+    c.execute("SELECT id, username, message, timestamp FROM messages ORDER BY timestamp ASC")
     messages = c.fetchall()
     conn.close()
     return render_template('farmer_discussion.html', username=session['user_name'], messages=messages)

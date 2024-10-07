@@ -16,7 +16,7 @@ def init_db():
                     lng REAL NOT NULL,
                     radius REAL NOT NULL
                 )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS messages (
+    c.execute('''CREATE TABLE IF NOT EXISTS messages2 (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     circle_id INTEGER NOT NULL,
                     username TEXT NOT NULL,

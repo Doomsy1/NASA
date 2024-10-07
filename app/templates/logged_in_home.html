@@ -3,153 +3,276 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NASA Space Apps Challenge</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <title>myFarm</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
         }
-        .navbar-brand img {
-            height: 40px;
-            width: auto;
+
+        body {
+            background: linear-gradient(90deg, #a1e49d, #43b048);
+            text-align: center;
+            overflow-x: hidden;
         }
-        .jumbotron {
-            background-color: #007bff;
+
+        header {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            width: 60px;
+            margin-right: 10px;
+        }
+
+        nav {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav ul li {
+            position: relative;
+            font-size: 18px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #3a3a3a;
+            display: flex;
+            align-items: center;
+        }
+
+        nav ul li a .arrow {
+            margin-left: 5px;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        nav ul li:hover a .arrow {
+            transform: rotate(180deg);
+        }
+
+        nav ul ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #ddffce; /* Updated dropdown background color */
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            z-index: 100;
+        }
+
+        nav ul li:hover ul {
+            display: block;
+        }
+
+        nav ul ul li {
+            width: 200px;
+        }
+
+        nav ul ul li a {
+            padding: 10px;
+            display: block;
+            color: #333;
+        }
+
+        nav ul ul li a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .auth-buttons {
+            position: absolute;
+            top: 40px;
+            right: 30px;
+        }
+
+        .auth-buttons a {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            background-color: #7f3edb;
             color: white;
-            padding: 50px 25px;
+            border-radius: 20px;
+            font-size: 18px;
+            text-decoration: none;
+        }
+
+        main {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 60px;
+            color: #0c2144;
+            margin-bottom: 20px;
+        }
+
+        .hero-text p {
+            font-size: 22px;
+            margin-bottom: 40px;
+            color: #333;
+        }
+
+        .hero-text a {
+            padding: 12px 24px;
+            background-color: #7f3edb;
+            color: white;
+            border-radius: 25px;
+            text-decoration: none;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        /* Services Section */
+        .services {
+            background: linear-gradient(90deg, #a1e49d, #43b048);
+            padding: 80px 0;
+            display: flex;
+            justify-content: space-evenly;
             text-align: center;
         }
-        .jumbotron h1 {
-            font-size: 3rem;
-            font-weight: bold;
+
+        .service {
+            flex: 1;
+            margin: 0 20px;
         }
-        .jumbotron p {
-            font-size: 1.2rem;
-        }
-        .card {
+
+        .services h2 {
+            font-size: 24px;
+            color: #7f3edb;
             margin-bottom: 20px;
+        }
+
+        .services img {
+            width: 100px;
+            margin-bottom: 20px;
+        }
+
+        .services p {
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Chat icon */
+        .chat-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #0c2144;
+            border-radius: 50%;
+            padding: 15px;
+        }
+
+        .chat-icon img {
+            width: 30px;
+            height: 30px;
+        }
+
+        /* Footer Section */
+        footer {
+            background-color: #0c2144;
+            padding: 40px 0;
+            color: white;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-<!-- Navbar -->
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="#">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" alt="Logo">
-        </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="/farmer_discussion">Live Farmer Chat</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/login">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/register">Register</a>
-                </li>
+
+<header>
+    <a href="/home"><img src="static/logo.png" alt="myFarm logo" style="width: 15vw; length: 50px;"></a> <!-- Replace this with your logo -->
+</header>
+
+<nav>
+    <ul>
+        <li><a href="/about">About Us</a></li>
+        <li>
+            <a href="#">Data <span class="arrow">▼</span></a>
+            <ul>
+                <li><a href="#">Soil Moisture Data</a></li>
+                <li><a href="#">Temperature Data</a></li>
             </ul>
-        </div>
-    </div>
+        </li>
+        <li>
+            <a href="#">Chats <span class="arrow">▼</span></a>
+            <ul>
+                <li><a href="/farmer_discussion">Global Chat</a></li>
+                <li><a href="/chat">AI Chat</a></li>
+            </ul>
+        </li>
+        <li><a href="/index">Simulation</a></li>
+    </ul>
 </nav>
 
-<!-- Jumbotron -->
-<div class="jumbotron">
-    <h1>Leveraging Earth Observation Data for Informed Agricultural Decision-Making</h1>
-    <p>Farmers face a deluge of water-related challenges due to unpredictable weather, pests, and diseases. Your challenge is to design a tool that empowers farmers to explore and utilize NASA datasets to improve their farming practices.</p>
-    <a href="#" class="btn btn-light btn-lg">Learn More</a>
+<div class="auth-buttons">
+    <a href="/logout">Logout</a>
 </div>
 
-<!-- Main content -->
-<a href="/farmer_discussion" class="btn btn-success my-4">Join Farmer Discussion</a>
+<main>
+    <div class="hero-text">
+        <h1>ALL IN ONE TOOL FOR FARMERS</h1>
+        <p>Whether it's conversing with local farmers or analyzing global NASA data, myFarm has you covered!</p>
+        <a id="learnMoreButton" href="#services">Learn More</a>
+    </div>
+</main>
 
-<div class="container my-5">
-    <div class="row">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Forecast Soil Conditions</h5>
-                    <p class="card-text">Get accurate soil condition forecasts to help make informed decisions regarding crop selection, planting, and fertilization.</p>
-                    <a href="/forecast" class="btn btn-primary">View Forecast</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Labour Connections</h5>
-                    <p class="card-text">Connect with available labor resources to ensure timely fieldwork and optimize farming productivity.</p>
-                    <a href="#" class="btn btn-primary">Connect Now</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Collaborative Pest Control</h5>
-                    <p class="card-text">Work together with neighboring farmers to control pests and diseases effectively, minimizing crop loss.</p>
-                    <a href="#" class="btn btn-primary">Learn More</a>
-                </div>
-            </div>
-        </div>
+<!-- Services Section -->
+<section id="services" class="services">
+    <div class="service">
+        <img src="static/chat-icon2.png" alt="Chats Icon">
+        <h2>Chats</h2>
+        <p>Chat with local farmers, farmers around the globe, or our AI!</p>
     </div>
- <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Crop Choices Assistance</h5>
-                    <p class="card-text">Receive tailored recommendations for crop selection based on soil conditions and weather forecasts.</p>
-                    <a href="#" class="btn btn-primary">Get Recommendations</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Fusarium Head Blight in Wheat</h5>
-                    <p class="card-text">Learn about Fusarium head blight (FHB) and how to manage it. Understand how warm, humid conditions contribute to this issue and find effective strategies to mitigate its impact.</p>
-                    <a href="#" class="btn btn-primary">Learn About FHB</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">Resources and Tools</h5>
-                    <p class="card-text">Find useful resources, tools, and NASA datasets to help you with your challenge.</p>
-                    <a href="#" class="btn btn-primary">Explore Resources</a>
-                </div>
-            </div>
-        </div>
+    <div class="service">
+        <img src="static/data-icon.png" alt="Data Icon">
+        <h2>Data</h2>
+        <p>Access various NASA data visualized on a map!</p>
     </div>
+    <div class="service">
+        <img src="static/simulation-icon.png" alt="Simulation Icon">
+        <h2>Simulation</h2>
+        <p>Simulate our rover to familiarize yourself with the controls and explore the virtual terrain!</p>
+    </div>
+</section>
+
+<!-- Footer Section -->
+<footer>
+    <p>&copy; 2024 myFarm. All rights reserved.</p>
+</footer>
+
+<div class="chat-icon">
+    <img src="static/chat-icon.png" alt="Chat"> <!-- Replace with your chat icon -->
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 <script>
-    // Initialize the map
-    var map = L.map('map').setView([42.3154, -83.0364], 6); // Set initial view to Windsor-Essex region
-
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Example marker for Fusarium Head Blight data in Windsor-Essex
-    L.marker([42.3154, -83.0364]).addTo(map)
-        .bindPopup('<b>Fusarium Head Blight Alert</b><br>High risk of FHB detected in this area.');
+    // Slow scroll to services section
+    document.getElementById('learnMoreButton').addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent default anchor behavior
+        const servicesSection = document.querySelector('#services');
+        window.scrollTo({
+            top: servicesSection.offsetTop,
+            behavior: 'smooth' // Adds smooth scrolling behavior
+        });
+    });
 </script>
+
 </body>
 </html>
