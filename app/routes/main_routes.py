@@ -27,7 +27,7 @@ def chat():
         user_input = data.get('user_input', '').strip()
         # Append the user's message to the conversation
         session['conversation'].append({"role": "user", "content": user_input})
-        openai.api_key = os.getenv('OPENAI_API_KEY')
+        openai.api_key = 'key'
 
         try:
             # OpenAI API call using the updated ChatCompletion endpoint
@@ -69,3 +69,7 @@ def farmer_discussion():
     messages = c.fetchall()
     conn.close()
     return render_template('farmer_discussion.html', username=session['user_name'], messages=messages)
+
+@main_bp.route('/about')
+def about():
+    return render_template("about.html")

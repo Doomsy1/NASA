@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us - myFarm</title>
+    <style>
+        /* Existing styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(90deg, #a1e49d, #43b048);
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        header {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            display: flex;
+            align-items: center;
+        }
+
+        header img {
+            width: 60px;
+            margin-right: 10px;
+        }
+
+        nav {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        nav ul li {
+            position: relative;
+            font-size: 18px;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #3a3a3a;
+            display: flex;
+            align-items: center;
+        }
+
+        nav ul li a .arrow {
+            margin-left: 5px;
+            font-size: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        nav ul li:hover a .arrow {
+            transform: rotate(180deg);
+        }
+
+        nav ul ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #ddffce;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            z-index: 100;
+        }
+
+        nav ul li:hover ul {
+            display: block;
+        }
+
+        nav ul ul li {
+            width: 200px;
+        }
+
+        nav ul ul li a {
+            padding: 10px;
+            display: block;
+            color: #333;
+        }
+
+        nav ul ul li a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .auth-buttons {
+            position: absolute;
+            top: 40px;
+            right: 30px;
+        }
+
+        .auth-buttons a {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            background-color: #7f3edb;
+            color: white;
+            border-radius: 20px;
+            font-size: 18px;
+            text-decoration: none;
+        }
+
+        /* About Us Section */
+        .about-us {
+            padding: 100px 0;
+            background: linear-gradient(90deg, #a1e49d, #43b048);
+            text-align: center;
+        }
+
+        .about-us h1 {
+            font-size: 50px;
+            color: #0c2144;
+            margin-bottom: 50px;
+        }
+
+        .team {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .team-member {
+            width: 200px;
+            background-color: #ffffff90;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .team-member img {
+            width: 100%;
+            border-radius: 50%;
+            margin-bottom: 15px;
+        }
+
+        .team-member h3 {
+            font-size: 22px;
+            color: #7f3edb;
+            margin-bottom: 10px;
+        }
+
+        .team-member p {
+            font-size: 16px;
+            color: #333;
+        }
+
+        /* Footer Section */
+        footer {
+            background-color: #0c2144;
+            padding: 40px 0;
+            color: white;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <a href="/home"><img src="static/logo.png" alt="myFarm logo" style="width: 15vw; length: 50px;"></a>
+</header>
+
+<nav>
+    <ul>
+        <li><a href="/about">About Us</a></li>
+        <li>
+            <a href="#">Data <span class="arrow">▼</span></a>
+            <ul>
+                <li><a href="#">Soil Moisture Data</a></li>
+                <li><a href="#">Temperature Data</a></li>
+            </ul>
+        </li>
+        <li>
+            <a href="#">Chats <span class="arrow">▼</span></a>
+            <ul>
+                <li><a href="/farmer_discussion">Global Chat</a></li>
+                <li><a href="/chat">AI Chat</a></li>
+            </ul>
+        </li>
+        <li><a href="/index">Simulation</a></li>
+    </ul>
+</nav>
+
+<div class="auth-buttons">
+    <a href="/login">Login</a>
+    <a href="/register">Register</a>
+</div>
+
+<!-- About Us Section -->
+<section class="about-us">
+    <h1>Meet Our Team</h1>
+    <div class="team">
+        <!-- Team Member 1 -->
+        <div class="team-member">
+            <img src="static/ario.png" alt="Ario Barin Ostovary">
+            <h3>Ario Barin Ostovary</h3>
+            <p>I made the backend, the ai chats, and helped frontend!</p>
+        </div>
+        <!-- Team Member 2 -->
+        <div class="team-member">
+            <img src="static/div.png" alt="Divyam Banga">
+            <h3>Divyam Banga</h3>
+            <p>I made the frontend, the live chats, and helped backend!</p>
+        </div>
+        <!-- Team Member 3 -->
+        <div class="team-member">
+            <img src="static/dorthy.png" alt="Dorothy Zheng">
+            <h3>Dorothy Zheng</h3>
+            <p>I worked on the data analysis portion!</p>
+        </div>
+        <!-- Team Member 4 -->
+        <div class="team-member">
+            <img src="static/kevin.png" alt="Kevin Dang">
+            <h3>Kevin Dang</h3>
+            <p>In this project, I built and helped program the rover!</p>
+        </div>
+        <!-- Team Member 5 -->
+        <div class="team-member">
+            <img src="static/noah.png" alt="Noah Levy">
+            <h3>Noah Levy</h3>
+            <p>I made the simulation and programmed the rover!</p>
+        </div>
+    </div>
+</section>
+
+<!-- Footer Section -->
+<footer>
+    <p>&copy; 2024 myFarm. All rights reserved.</p>
+</footer>
+
+</body>
+</html>
