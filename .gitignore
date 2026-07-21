@@ -30,3 +30,7 @@ env/
 # OS
 .DS_Store
 Thumbs.db
+
+# local user database (PII)
+users.db
+*.db
