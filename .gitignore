@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.key
+
+# SQLite databases (runtime state, contains user PII)
+*.db
+*.sqlite
+*.sqlite3
+
+# NASA GLDAS data files (16MB+ public data, fetch on demand)
+*.nc4
+*.nc
+
+# IDE / editor
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# local user database (PII)
+users.db
+*.db

@@ -7,7 +7,7 @@ load_dotenv()
 
 def create_app():
     app = Flask(__name__)
-    app.secret_key = "winners"
+    app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
 
     # Import and register blueprints
     from .routes.auth_routes import auth_bp
